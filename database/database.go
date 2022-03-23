@@ -64,9 +64,8 @@ func InsertUser(user models.User) {
 func CheckUserLogin(user models.User) models.User {
 	var result models.User
 	var nullUser models.User
-	err := collection.FindOne(context.Background(), bson.D{}).Decode(&result)
+	err := collection.FindOne(context.Background(), bson.D{{"username", user.Username}}).Decode(&result)
 	if err != nil {
-		log.Fatal(err)
 		return nullUser
 	}
 	var passwordMatch = CheckPasswordHash(user.Password, result.Password)

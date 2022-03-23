@@ -27,6 +27,7 @@ func CreateUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	database.InsertUser(user)
+	fmt.Println("user1", user)
 	json.NewEncoder(w).Encode(user)
 }
 func LoginUser(w http.ResponseWriter, r *http.Request) {
