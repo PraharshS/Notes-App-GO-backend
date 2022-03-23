@@ -34,27 +34,6 @@ func CreateDBInstance() {
 
 	collection = client.Database(dbName).Collection(collName)
 	fmt.Println("collection instance created")
-	// client, err := mongo.NewClient(options.Client().ApplyURI("mongodb+srv://zitrakz:mongopass747@pdgcluster.txsie.mongodb.net/myFirstDatabase?retryWrites=true&w=majority"))
-	// if err != nil {
-	// 	log.Fatal(err)
-	// }
-	// ctx, _ := context.WithTimeout(context.Background(), 100*time.Second)
-	// client, err = mongo.Connect(ctx)
-	// if err != nil {
-	// 	log.Fatal(err)
-	// }
-	// defer client.Disconnect(ctx)
-	// err = client.Ping(ctx, readpref.Primary())
-	// if err != nil {
-	// 	log.Fatal(err)
-	// }
-	// databases, err := client.ListDatabaseNames(ctx, bson.M{})
-	// if err != nil {
-	// 	log.Fatal(err)
-	// }
-	// fmt.Println(databases)
-	// fmt.Println("connected to mongo DB")
-	// collection := client.Database("golang-db").Collection("users")
 
 }
 func InsertUser(user models.User) {
@@ -65,5 +44,5 @@ func InsertUser(user models.User) {
 		log.Fatal(err)
 	}
 
-	fmt.Println("Inserted a single record", insertResult.InsertedID)
+	fmt.Println("USER CREATED", insertResult.InsertedID)
 }
