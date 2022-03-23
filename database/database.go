@@ -61,14 +61,18 @@ func InsertUser(user models.User) {
 	}
 	fmt.Println("USER CREATED", insertResult.InsertedID)
 }
-func CheckUserLogin(user models.User) {
+func CheckUserLogin(user models.User) models.User {
 	var result models.User
-	err := collection.FindOne(context.Background(), bson.D{{"username", user.Username}}).Decode(&result)
-	if err == mongo.ErrNoDocuments {
+	var nullUser models.User
+	err := collection.FindOne(context.Background(), bson.D{}).Decode(&result)
+	if err != nil {
 		log.Fatal(err)
-		return
+		return nullUser
 	}
-	// CheckPasswordHash(user.Password, result[fmt.Sprint("password")])
-	fmt.Println("found document ", result)
-	fmt.Println("found values " + result.Username + " " + result.Password)
+	var passwordMatch = CheckPasswordHash(user.Password, result.Password)
+	if passwordMatch == false {
+		return nullUser
+	}
+	fmt.Println("Login Data", result.ID, result.Username, result.Password)
+	return result
 }

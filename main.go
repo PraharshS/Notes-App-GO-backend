@@ -38,8 +38,8 @@ func LoginUser(w http.ResponseWriter, r *http.Request) {
 	json.NewDecoder(r.Body).Decode(&user)
 	fmt.Println("login hit with user", user)
 
-	database.CheckUserLogin(user)
-	// json.NewEncoder(w).Encode(loggedUser)
+	var loggedUser = database.CheckUserLogin(user)
+	json.NewEncoder(w).Encode(loggedUser)
 }
 
 func main() {
@@ -48,5 +48,5 @@ func main() {
 	database.CreateDBInstance()
 	router.HandleFunc(API_BASE_URL+"/user/add", CreateUser).Methods("POST", "OPTIONS")
 	router.HandleFunc(API_BASE_URL+"/user/login", LoginUser).Methods("POST", "OPTIONS")
-	log.Fatal(http.ListenAndServe("127.0.0.1:8000", router))
+	log.Fatal(http.ListenAndServe("127.0.0.1:8001", router))
 }
