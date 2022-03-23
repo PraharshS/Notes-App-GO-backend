@@ -42,12 +42,41 @@ func LoginUser(w http.ResponseWriter, r *http.Request) {
 	var loggedUser = database.CheckUserLogin(user)
 	json.NewEncoder(w).Encode(loggedUser)
 }
+func CreateTask(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/x-www-form-urlencoded")
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+	w.Header().Set("Access-Control-Allow-Methods", "POST")
+	w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
 
+	var task models.Task
+	json.NewDecoder(r.Body).Decode(&task)
+	fmt.Println("create task hit with task ", task)
+	if task.Message == "" {
+		return
+	}
+	database.InsertTask(task)
+	json.NewEncoder(w).Encode(task)
+}
+func FetchTasks(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/x-www-form-urlencoded")
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+	w.Header().Set("Access-Control-Allow-Methods", "POST")
+	w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
+	fmt.Println("fetch tasks hit")
+	var user models.User
+	json.NewDecoder(r.Body).Decode(&user)
+	fmt.Println("fetch tasks hit with user", user)
+	var tasksList = database.GetTasksByUser(user)
+	json.NewEncoder(w).Encode(tasksList)
+}
 func main() {
 	router := mux.NewRouter()
 	API_BASE_URL := "/go-api"
 	database.CreateDBInstance()
 	router.HandleFunc(API_BASE_URL+"/user/add", CreateUser).Methods("POST", "OPTIONS")
 	router.HandleFunc(API_BASE_URL+"/user/login", LoginUser).Methods("POST", "OPTIONS")
-	log.Fatal(http.ListenAndServe("127.0.0.1:8001", router))
+
+	router.HandleFunc(API_BASE_URL+"/note", CreateTask).Methods("POST", "OPTIONS")
+	router.HandleFunc(API_BASE_URL+"/notes-by-user", FetchTasks).Methods("POST", "OPTIONS")
+	log.Fatal(http.ListenAndServe("127.0.0.1:8002", router))
 }
