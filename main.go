@@ -55,8 +55,8 @@ func CreateTask(w http.ResponseWriter, r *http.Request) {
 	if task.Message == "" {
 		return
 	}
-	database.InsertTask(task)
-	json.NewEncoder(w).Encode(task)
+	var createdTask = database.InsertTask(task)
+	json.NewEncoder(w).Encode(createdTask)
 }
 func FetchTasks(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/x-www-form-urlencoded")

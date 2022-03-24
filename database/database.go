@@ -88,13 +88,16 @@ func CheckUserLogin(user models.User) models.User {
 	fmt.Println("Login Data", result.ID, result.Username, result.Password)
 	return result
 }
-func InsertTask(task models.Task) {
+func InsertTask(task models.Task) models.Task {
 	collection = mongoClient.Database("golang-db").Collection("notes")
 	insertResult, err := collection.InsertOne(context.Background(), task)
+	var result models.Task
+	err = collection.FindOne(context.Background(), bson.D{{"_id", insertResult.InsertedID}}).Decode(&result)
 	if err != nil {
 		log.Fatal(err)
 	}
 	fmt.Println("TASK CREATED", insertResult.InsertedID)
+	return result
 }
 func GetTasksByUser(user models.User) []models.Task {
 	collection = mongoClient.Database("golang-db").Collection("notes")
