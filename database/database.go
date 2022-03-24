@@ -49,7 +49,7 @@ func CheckPasswordHash(password, hash string) bool {
 	err := bcrypt.CompareHashAndPassword([]byte(hash), []byte(password))
 	return err == nil
 }
-func InsertUser(user models.User) {
+func InsertUser(user models.User) models.User {
 	collection = mongoClient.Database("golang-db").Collection("users")
 	HashedUserPassword, err := HashPassword(user.Password)
 	user.Password = HashedUserPassword
@@ -61,7 +61,17 @@ func InsertUser(user models.User) {
 	if err != nil {
 		log.Fatal(err)
 	}
-	fmt.Println("USER CREATED", insertResult.InsertedID)
+	fmt.Println("USER CREATED ID", insertResult.InsertedID, user.Username)
+	var result models.User
+	var nullUser models.User
+	err = collection.FindOne(context.Background(), bson.D{{"_id", insertResult.InsertedID}}).Decode(&result)
+	fmt.Println("RESULT ", result.ID, result.Username)
+	fmt.Println("RESULT ", result)
+	if err != nil {
+		return nullUser
+	}
+	fmt.Println("NO ERR ")
+	return result
 }
 func CheckUserLogin(user models.User) models.User {
 	collection = mongoClient.Database("golang-db").Collection("users")
