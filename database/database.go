@@ -7,6 +7,7 @@ import (
 	"notes-app/models"
 
 	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 	"golang.org/x/crypto/bcrypt"
@@ -123,4 +124,19 @@ func GetTasksByUser(user models.User) []models.Task {
 	}
 	return tasksList
 
+}
+func DeleteTask(taskIdHex string) {
+	taskId, err := primitive.ObjectIDFromHex(taskIdHex)
+	if err != nil {
+		panic(err)
+	}
+	fmt.Println("objectId", taskId)
+	collection = mongoClient.Database("golang-db").Collection("notes")
+
+	deleteResult, _ := collection.DeleteOne(context.TODO(), bson.M{"_id": taskId})
+	if deleteResult.DeletedCount == 0 {
+		log.Fatal("Error on deleting one Hero", err)
+
+	}
+	fmt.Println("Deleted task of Id ", taskIdHex, deleteResult)
 }
