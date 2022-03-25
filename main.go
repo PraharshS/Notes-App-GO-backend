@@ -53,6 +53,7 @@ func CreateTask(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	var task models.Task
+	fmt.Println("create task hit with task ", task)
 	json.NewDecoder(r.Body).Decode(&task)
 	fmt.Println("create task hit with task ", task)
 	if task.Message == "" {
@@ -100,6 +101,16 @@ func DeleteTask(w http.ResponseWriter, r *http.Request) {
 	database.DeleteTask(id)
 	json.NewEncoder(w).Encode("Task Deleted Successfully")
 }
+func ToggleTaskDone(w http.ResponseWriter, r *http.Request) {
+	fmt.Println("Done task hit")
+	vars := mux.Vars(r)
+	id, ok := vars["id"]
+	if !ok {
+		fmt.Println("id is missing in parameters")
+	}
+	fmt.Println(`id := `, id)
+	database.ToggleTaskDone(id)
+}
 func main() {
 	router := mux.NewRouter()
 	API_BASE_URL := "/go-api"
@@ -109,6 +120,7 @@ func main() {
 
 	router.HandleFunc(API_BASE_URL+"/notesByUser", FetchTasks).Methods("POST", "OPTIONS")
 	router.HandleFunc(API_BASE_URL+"/note/{id}", DeleteTask).Methods("DELETE", "OPTIONS")
+	router.HandleFunc(API_BASE_URL+"/note/{id}", ToggleTaskDone).Methods("PUT", "OPTIONS")
 	router.HandleFunc(API_BASE_URL+"/note", CreateTask).Methods("POST", "OPTIONS")
 	log.Fatal(http.ListenAndServe("127.0.0.1:8000", router))
 }

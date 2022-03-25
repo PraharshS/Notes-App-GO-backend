@@ -140,3 +140,25 @@ func DeleteTask(taskIdHex string) {
 	}
 	fmt.Println("Deleted task of Id ", taskIdHex, deleteResult)
 }
+func ToggleTaskDone(taskIdHex string) {
+	taskId, err := primitive.ObjectIDFromHex(taskIdHex)
+	if err != nil {
+		panic(err)
+	}
+	fmt.Println("objectId", taskId)
+	collection = mongoClient.Database("golang-db").Collection("notes")
+	var foundTask models.Task
+	err = collection.FindOne(context.TODO(), bson.D{{"_id", taskId}}).Decode(&foundTask)
+	var toggleStatusTask = !foundTask.IsDone
+	if err != nil {
+		log.Fatal(err)
+		return
+	}
+	fmt.Println(foundTask)
+	result, _ := collection.UpdateOne(
+		context.TODO(),
+		bson.M{"_id": taskId},
+		bson.M{"$set": bson.M{"is_done": toggleStatusTask}},
+	)
+	fmt.Printf("Task done with id", taskIdHex, result)
+}
