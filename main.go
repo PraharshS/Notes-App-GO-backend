@@ -68,6 +68,10 @@ func FetchTasks(w http.ResponseWriter, r *http.Request) {
 	json.NewDecoder(r.Body).Decode(&user)
 	fmt.Println("fetch tasks hit with user", user)
 	var tasksList = database.GetTasksByUser(user)
+	fmt.Println("taskList", tasksList)
+	if tasksList == nil {
+		tasksList = make([]models.Task, 0)
+	}
 	json.NewEncoder(w).Encode(tasksList)
 }
 func main() {
@@ -77,7 +81,7 @@ func main() {
 	router.HandleFunc(API_BASE_URL+"/user/add", CreateUser).Methods("POST", "OPTIONS")
 	router.HandleFunc(API_BASE_URL+"/user/login", LoginUser).Methods("POST", "OPTIONS")
 
+	router.HandleFunc(API_BASE_URL+"/notesByUser", FetchTasks).Methods("POST", "OPTIONS")
 	router.HandleFunc(API_BASE_URL+"/note", CreateTask).Methods("POST", "OPTIONS")
-	router.HandleFunc(API_BASE_URL+"/notes-by-user", FetchTasks).Methods("POST", "OPTIONS")
 	log.Fatal(http.ListenAndServe("127.0.0.1:8000", router))
 }

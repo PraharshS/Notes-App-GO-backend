@@ -105,6 +105,7 @@ func GetTasksByUser(user models.User) []models.Task {
 	findResult, err := collection.Find(context.TODO(), bson.D{{"user.username", user.Username}})
 	if err != nil {
 		log.Fatal(err)
+		return tasksList
 	}
 	for findResult.Next(context.TODO()) {
 		//Create a value into which the single document can be decoded
