@@ -36,10 +36,7 @@ func CreateDBInstance() {
 	}
 
 	fmt.Println("connected to mongodb!")
-
 	collection = client.Database(dbName).Collection(collName)
-	fmt.Println("collection instance created")
-
 }
 func HashPassword(password string) (string, error) {
 	bytes, err := bcrypt.GenerateFromPassword([]byte(password), 14)
@@ -161,4 +158,24 @@ func ToggleTaskDone(taskIdHex string) {
 		bson.M{"$set": bson.M{"is_done": toggleStatusTask}},
 	)
 	fmt.Printf("Task done with id", taskIdHex, result)
+}
+func UpdateTask(taskIdHex string, updatedTask models.Task) {
+	collection = mongoClient.Database("golang-db").Collection("notes")
+	taskId, err := primitive.ObjectIDFromHex(taskIdHex)
+	if err != nil {
+		panic(err)
+	}
+	fmt.Println("objectId", taskId)
+	filter := bson.M{"_id": taskId}
+	result, err := collection.ReplaceOne(context.TODO(), filter, updatedTask)
+
+	if err != nil {
+		log.Fatal(err)
+	}
+	fmt.Printf(
+		"insert: %d, updated: %d, deleted: %d /n",
+		result.MatchedCount,
+		result.ModifiedCount,
+		result.UpsertedCount,
+	)
 }
