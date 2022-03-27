@@ -87,7 +87,7 @@ func CheckUserLogin(user models.User) models.User {
 	return result
 }
 func InsertTask(task models.Task) models.Task {
-	collection = mongoClient.Database("golang-db").Collection("notes")
+	collection = mongoClient.Database("golang-db").Collection("tasks")
 	insertResult, err := collection.InsertOne(context.Background(), task)
 	var result models.Task
 	err = collection.FindOne(context.Background(), bson.D{{"_id", insertResult.InsertedID}}).Decode(&result)
@@ -98,7 +98,7 @@ func InsertTask(task models.Task) models.Task {
 	return result
 }
 func GetTasksByUser(user models.User) []models.Task {
-	collection = mongoClient.Database("golang-db").Collection("notes")
+	collection = mongoClient.Database("golang-db").Collection("tasks")
 	var tasksList []models.Task
 	findResult, err := collection.Find(context.TODO(), bson.D{{"user.username", user.Username}})
 	if err != nil {
@@ -128,7 +128,7 @@ func DeleteTask(taskIdHex string) {
 		panic(err)
 	}
 	fmt.Println("objectId", taskId)
-	collection = mongoClient.Database("golang-db").Collection("notes")
+	collection = mongoClient.Database("golang-db").Collection("tasks")
 
 	deleteResult, _ := collection.DeleteOne(context.TODO(), bson.M{"_id": taskId})
 	if deleteResult.DeletedCount == 0 {
@@ -143,7 +143,7 @@ func ToggleTaskDone(taskIdHex string) {
 		panic(err)
 	}
 	fmt.Println("objectId", taskId)
-	collection = mongoClient.Database("golang-db").Collection("notes")
+	collection = mongoClient.Database("golang-db").Collection("tasks")
 	var foundTask models.Task
 	err = collection.FindOne(context.TODO(), bson.D{{"_id", taskId}}).Decode(&foundTask)
 	var toggleStatusTask = !foundTask.IsDone
@@ -160,7 +160,7 @@ func ToggleTaskDone(taskIdHex string) {
 	fmt.Printf("Task done with id", taskIdHex, result)
 }
 func UpdateTask(taskIdHex string, updatedTask models.Task) {
-	collection = mongoClient.Database("golang-db").Collection("notes")
+	collection = mongoClient.Database("golang-db").Collection("tasks")
 	taskId, err := primitive.ObjectIDFromHex(taskIdHex)
 	if err != nil {
 		panic(err)

@@ -139,10 +139,10 @@ func main() {
 	router.HandleFunc(API_BASE_URL+"/user/add", CreateUser).Methods("POST", "OPTIONS")
 	router.HandleFunc(API_BASE_URL+"/user/login", LoginUser).Methods("POST", "OPTIONS")
 
-	router.HandleFunc(API_BASE_URL+"/notesByUser", FetchTasks).Methods("POST", "OPTIONS")
-	router.HandleFunc(API_BASE_URL+"/note/{id}", DeleteTask).Methods("DELETE", "OPTIONS")
-	router.HandleFunc(API_BASE_URL+"/note/{id}", ToggleTaskDone).Methods("PUT", "OPTIONS")
-	router.HandleFunc(API_BASE_URL+"/note", CreateTask).Methods("POST", "OPTIONS")
-	router.HandleFunc(API_BASE_URL+"/update-note/{id}", UpdateTask).Methods("PUT", "OPTIONS")
+	router.HandleFunc(API_BASE_URL+"/task", CreateTask).Methods("POST", "OPTIONS")
+	router.HandleFunc(API_BASE_URL+"/tasksByUser", FetchTasks).Methods("POST", "OPTIONS")
+	router.HandleFunc(API_BASE_URL+"/task/{id}", DeleteTask).Methods("DELETE", "OPTIONS")
+	router.HandleFunc(API_BASE_URL+"/task/{id}", ToggleTaskDone).Methods("PUT", "OPTIONS")
+	router.HandleFunc(API_BASE_URL+"/update-task/{id}", UpdateTask).Methods("PUT", "OPTIONS")
 	log.Fatal(http.ListenAndServe("127.0.0.1:8000", router))
 }
