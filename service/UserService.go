@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
-	"notes-app/database"
+	"notes-app/db"
 	"notes-app/models"
 )
 
@@ -21,7 +21,7 @@ func CreateUser(w http.ResponseWriter, r *http.Request) {
 	if user.Username == "" {
 		return
 	}
-	var addedUser = database.InsertUser(user)
+	var addedUser = db.InsertUser(user)
 	// fmt.Println("added user ", addedUser)
 	json.NewEncoder(w).Encode(addedUser)
 }
@@ -34,6 +34,6 @@ func LoginUser(w http.ResponseWriter, r *http.Request) {
 	json.NewDecoder(r.Body).Decode(&user)
 	fmt.Println("login hit with user", user)
 
-	var loggedUser = database.CheckUserLogin(user)
+	var loggedUser = db.CheckUserLogin(user)
 	json.NewEncoder(w).Encode(loggedUser)
 }

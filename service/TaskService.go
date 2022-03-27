@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
-	"notes-app/database"
+	"notes-app/db"
 	"notes-app/models"
 
 	"github.com/gorilla/mux"
@@ -26,7 +26,7 @@ func CreateTask(w http.ResponseWriter, r *http.Request) {
 	if task.Name == "" {
 		return
 	}
-	var createdTask = database.InsertTask(task)
+	var createdTask = db.InsertTask(task)
 	json.NewEncoder(w).Encode(createdTask)
 }
 func FetchTasks(w http.ResponseWriter, r *http.Request) {
@@ -45,7 +45,7 @@ func FetchTasks(w http.ResponseWriter, r *http.Request) {
 	}
 	fmt.Println(`userID := `, userID)
 	fmt.Println("fetch tasks hit with userID", userID)
-	var tasksList = database.GetTasksByUser(userID)
+	var tasksList = db.GetTasksByUser(userID)
 	if tasksList == nil {
 		tasksList = make([]models.Task, 0)
 	}
@@ -69,7 +69,7 @@ func DeleteTask(w http.ResponseWriter, r *http.Request) {
 		fmt.Println("id is missing in parameters")
 	}
 	fmt.Println(`id := `, id)
-	database.DeleteTask(id)
+	db.DeleteTask(id)
 	json.NewEncoder(w).Encode("Task Deleted Successfully")
 }
 func ToggleTaskDone(w http.ResponseWriter, r *http.Request) {
@@ -80,7 +80,7 @@ func ToggleTaskDone(w http.ResponseWriter, r *http.Request) {
 		fmt.Println("id is missing in parameters")
 	}
 	fmt.Println(`id := `, id)
-	database.ToggleTaskDone(id)
+	db.ToggleTaskDone(id)
 }
 func UpdateTask(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/x-www-form-urlencoded")
@@ -100,5 +100,5 @@ func UpdateTask(w http.ResponseWriter, r *http.Request) {
 	var task models.Task
 	fmt.Println("update task hit with task ", task)
 	json.NewDecoder(r.Body).Decode(&task)
-	database.UpdateTask(id, task)
+	db.UpdateTask(id, task)
 }
