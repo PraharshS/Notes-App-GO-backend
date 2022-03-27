@@ -5,22 +5,29 @@ import (
 	"fmt"
 	"log"
 	"notes-app/models"
+	util "notes-app/util"
+	"os"
 
+	"github.com/joho/godotenv"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
-	"golang.org/x/crypto/bcrypt"
 )
 
-var collection *mongo.Collection
-
 var mongoClient *mongo.Client
+var DBName string
+var userCollectionName string
+var taskCollectionName string
+var userCollection *mongo.Collection
+var taskCollection *mongo.Collection
 
 func CreateDBInstance() {
-	connectionString := `mongodb+srv://zitrakz:mongopass747@pdgcluster.txsie.mongodb.net/myFirstDatabase?retryWrites=true&w=majority`
-	dbName := `golang-db`
-	collName := `users`
+	godotenv.Load()
+	connectionString := os.Getenv("DB_URI")
+	DBName = os.Getenv("DB_NAME")
+	userCollectionName = os.Getenv("USER_DBCOLLECTION_NAME")
+	taskCollectionName = os.Getenv("TASK_DBCOLLECTION_NAME")
 
 	clientOptions := options.Client().ApplyURI(connectionString)
 
@@ -36,33 +43,25 @@ func CreateDBInstance() {
 	}
 
 	fmt.Println("connected to mongodb!")
-	collection = client.Database(dbName).Collection(collName)
-}
-func HashPassword(password string) (string, error) {
-	bytes, err := bcrypt.GenerateFromPassword([]byte(password), 14)
-	return string(bytes), err
+	userCollection = client.Database(DBName).Collection(userCollectionName)
+	taskCollection = client.Database(DBName).Collection(taskCollectionName)
 }
 
-func CheckPasswordHash(password, hash string) bool {
-	err := bcrypt.CompareHashAndPassword([]byte(hash), []byte(password))
-	return err == nil
-}
 func InsertUser(user models.User) models.User {
-	collection = mongoClient.Database("golang-db").Collection("users")
-	HashedUserPassword, err := HashPassword(user.Password)
+	HashedUserPassword, err := util.HashPassword(user.Password)
 	user.Password = HashedUserPassword
 
 	if err != nil {
 		log.Fatal(err)
 	}
-	insertResult, err := collection.InsertOne(context.Background(), user)
+	insertResult, err := userCollection.InsertOne(context.Background(), user)
 	if err != nil {
 		log.Fatal(err)
 	}
 	fmt.Println("USER CREATED ID", insertResult.InsertedID, user.Username)
 	var result models.User
 	var nullUser models.User
-	err = collection.FindOne(context.Background(), bson.D{{"_id", insertResult.InsertedID}}).Decode(&result)
+	err = userCollection.FindOne(context.Background(), bson.M{"_id": insertResult.InsertedID}).Decode(&result)
 	fmt.Println("RESULT ", result.ID, result.Username)
 	fmt.Println("RESULT ", result)
 	if err != nil {
@@ -72,14 +71,13 @@ func InsertUser(user models.User) models.User {
 	return result
 }
 func CheckUserLogin(user models.User) models.User {
-	collection = mongoClient.Database("golang-db").Collection("users")
 	var result models.User
 	var nullUser models.User
-	err := collection.FindOne(context.Background(), bson.D{{"username", user.Username}}).Decode(&result)
+	err := userCollection.FindOne(context.Background(), bson.M{"username": user.Username}).Decode(&result)
 	if err != nil {
 		return nullUser
 	}
-	var passwordMatch = CheckPasswordHash(user.Password, result.Password)
+	var passwordMatch = util.CheckPasswordHash(user.Password, result.Password)
 	if !passwordMatch {
 		return nullUser
 	}
@@ -87,10 +85,13 @@ func CheckUserLogin(user models.User) models.User {
 	return result
 }
 func InsertTask(task models.Task) models.Task {
-	collection = mongoClient.Database("golang-db").Collection("tasks")
-	insertResult, err := collection.InsertOne(context.Background(), task)
+	taskCollection = mongoClient.Database(DBName).Collection("tasks")
+	insertResult, err := taskCollection.InsertOne(context.Background(), task)
+	if err != nil {
+		log.Fatal(err)
+	}
 	var result models.Task
-	err = collection.FindOne(context.Background(), bson.D{{"_id", insertResult.InsertedID}}).Decode(&result)
+	err = taskCollection.FindOne(context.Background(), bson.M{"_id": insertResult.InsertedID}).Decode(&result)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -98,13 +99,12 @@ func InsertTask(task models.Task) models.Task {
 	return result
 }
 func GetTasksByUser(userIDHex string) []models.Task {
-	collection = mongoClient.Database("golang-db").Collection("tasks")
 	userID, err := primitive.ObjectIDFromHex(userIDHex)
 	if err != nil {
 		panic(err)
 	}
 	var tasksList []models.Task
-	findResult, err := collection.Find(context.TODO(), bson.D{{"user._id", userID}})
+	findResult, err := taskCollection.Find(context.TODO(), bson.M{"user._id": userID})
 	if err != nil {
 		log.Fatal(err)
 		return tasksList
@@ -118,7 +118,6 @@ func GetTasksByUser(userIDHex string) []models.Task {
 		}
 
 		tasksList = append(tasksList, task)
-
 	}
 	if err := findResult.Err(); err != nil {
 		log.Fatal(err)
@@ -132,11 +131,10 @@ func DeleteTask(taskIdHex string) {
 		panic(err)
 	}
 	fmt.Println("objectId", taskId)
-	collection = mongoClient.Database("golang-db").Collection("tasks")
 
-	deleteResult, _ := collection.DeleteOne(context.TODO(), bson.M{"_id": taskId})
+	deleteResult, _ := taskCollection.DeleteOne(context.TODO(), bson.M{"_id": taskId})
 	if deleteResult.DeletedCount == 0 {
-		log.Fatal("Error on deleting one Hero", err)
+		log.Fatal("Error on deleting one Task", err)
 
 	}
 	fmt.Println("Deleted task of Id ", taskIdHex, deleteResult)
@@ -147,16 +145,16 @@ func ToggleTaskDone(taskIdHex string) {
 		panic(err)
 	}
 	fmt.Println("objectId", taskId)
-	collection = mongoClient.Database("golang-db").Collection("tasks")
+
 	var foundTask models.Task
-	err = collection.FindOne(context.TODO(), bson.D{{"_id", taskId}}).Decode(&foundTask)
+	err = taskCollection.FindOne(context.TODO(), bson.M{"_id": taskId}).Decode(&foundTask)
 	var toggleStatusTask = !foundTask.IsDone
 	if err != nil {
 		log.Fatal(err)
 		return
 	}
 	fmt.Println(foundTask)
-	result, _ := collection.UpdateOne(
+	result, _ := taskCollection.UpdateOne(
 		context.TODO(),
 		bson.M{"_id": taskId},
 		bson.M{"$set": bson.M{"is_done": toggleStatusTask}},
@@ -164,14 +162,13 @@ func ToggleTaskDone(taskIdHex string) {
 	fmt.Println("Task done with id", taskIdHex, result)
 }
 func UpdateTask(taskIdHex string, updatedTask models.Task) {
-	collection = mongoClient.Database("golang-db").Collection("tasks")
 	taskId, err := primitive.ObjectIDFromHex(taskIdHex)
 	if err != nil {
 		panic(err)
 	}
 	fmt.Println("objectId", taskId)
 	filter := bson.M{"_id": taskId}
-	result, err := collection.ReplaceOne(context.TODO(), filter, updatedTask)
+	result, err := taskCollection.ReplaceOne(context.TODO(), filter, updatedTask)
 
 	if err != nil {
 		log.Fatal(err)
