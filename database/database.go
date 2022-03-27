@@ -97,10 +97,14 @@ func InsertTask(task models.Task) models.Task {
 	fmt.Println("TASK CREATED", insertResult.InsertedID)
 	return result
 }
-func GetTasksByUser(user models.User) []models.Task {
+func GetTasksByUser(userIDHex string) []models.Task {
 	collection = mongoClient.Database("golang-db").Collection("tasks")
+	userID, err := primitive.ObjectIDFromHex(userIDHex)
+	if err != nil {
+		panic(err)
+	}
 	var tasksList []models.Task
-	findResult, err := collection.Find(context.TODO(), bson.D{{"user.username", user.Username}})
+	findResult, err := collection.Find(context.TODO(), bson.D{{"user._id", userID}})
 	if err != nil {
 		log.Fatal(err)
 		return tasksList
@@ -157,7 +161,7 @@ func ToggleTaskDone(taskIdHex string) {
 		bson.M{"_id": taskId},
 		bson.M{"$set": bson.M{"is_done": toggleStatusTask}},
 	)
-	fmt.Printf("Task done with id", taskIdHex, result)
+	fmt.Println("Task done with id", taskIdHex, result)
 }
 func UpdateTask(taskIdHex string, updatedTask models.Task) {
 	collection = mongoClient.Database("golang-db").Collection("tasks")
