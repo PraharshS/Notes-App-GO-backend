@@ -1,16 +1,18 @@
-package db
+package database
 
 import (
 	"context"
 	"fmt"
 	"log"
 	"notes-app/models"
+	encryption "notes-app/util"
 
 	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
-var mongoClient *mongo.Clien
+var mongoClient *mongo.Client
 var DBName string
 var userCollectionName string
 var taskCollectionName string
@@ -18,59 +20,59 @@ var userCollection *mongo.Collection
 var taskCollection *mongo.Collection
 
 func InsertUser(user models.User) models.User {
-	HashedUserPassword, err := HashPasword(user.Password)
+	HashedUserPassword, err := encryption.HashPassword(user.Password)
 	user.Password = HashedUserPassword
 
 	if err != nil {
 		log.Fatal(err)
 	}
-	insertResult, er := userCollection.InsertOne(context.Background(), user)
+	insertResult, err := userCollection.InsertOne(context.Background(), user)
 	if err != nil {
 		log.Fatal(err)
 	}
-	fmt.Println("USER CREAED ID", insertResult.InsertedID, user.Username)
+	fmt.Println("USER CREAD ID", insertResult.InsertedID, user.Username)
 	var result models.User
 	var nullUser models.User
 	err = userCollection.FindOne(context.Background(), bson.M{"_id": insertResult.InsertedID}).Decode(&result)
-	fmt.Println("RESULT ", result.D, result.Username)
-	fmt.Println("REULT ", result)
+	fmt.Println("RESULT ", result.ID, result.Username)
+	fmt.Println("RELT ", result)
 	if err != nil {
 		return nullUser
 	}
-	fmt.Println("O ERR ")
+	fmt.Println(" ERR ")
 	return result
 }
-func CheckUserLogin(use models.User) models.User {
+func CheckUserLogin(user models.User) models.User {
 	var result models.User
 	var nullUser models.User
-	err := userCollction.FindOne(context.Background(), bson.M{"username": user.Username}).Decode(&result)
+	err := userCollection.FindOne(context.Background(), bson.M{"username": user.Username}).Decode(&result)
 	if err != nil {
 		return nullUser
 	}
-	var passwordMatch = CheckPasswordHash(user.Password, result.Password)
-	if !passwordMatc {
+	var passwordMatch = encryption.CheckPasswordHash(user.Password, result.Password)
+	if !passwordMatch {
 		return nullUser
 	}
-	fmt.Println("ogin Data", result.ID, result.Username, result.Password)
+	fmt.Println("gin Data", result.ID, result.Username, result.Password)
 	return result
 }
 func InsertTask(task models.Task) models.Task {
 	taskCollection = mongoClient.Database(DBName).Collection("tasks")
-	insertResult, er := taskCollection.InsertOne(context.Background(), task)
+	insertResult, err := taskCollection.InsertOne(context.Background(), task)
 	if err != nil {
 		log.Fatal(err)
 	}
 	var result models.Task
-	err = taskColletion.FindOne(context.Background(), bson.M{"_id": insertResult.InsertedID}).Decode(&result)
+	err = taskCollection.FindOne(context.Background(), bson.M{"_id": insertResult.InsertedID}).Decode(&result)
 	if err != nil {
 		log.Fatal(err)
 	}
-	fmt.Println("ASK CREATED", insertResult.InsertedID)
+	fmt.Println("SK CREATED", insertResult.InsertedID)
 	return result
 }
 func GetTasksByUser(userIDHex string) []models.Task {
-	userID, err := rimitive.ObjectIDFromHex(userIDHex)
-	if err != nl {
+	userID, err := primitive.ObjectIDFromHex(userIDHex)
+	if err != nil {
 		panic(err)
 	}
 	var tasksList []models.Task
@@ -80,60 +82,60 @@ func GetTasksByUser(userIDHex string) []models.Task {
 		return tasksList
 	}
 	for findResult.Next(context.TODO()) {
-		//Create a value int which the single document can be decoded
+		//Create a value intwhich the single document can be decoded
 		var task models.Task
-		err := findResut.Decode(&task)
+		err := findResult.Decode(&task)
 		if err != nil {
 			log.Fatal(err)
 		}
 
-		asksList = append(tasksList, task)
+		tasksList = append(tasksList, task)
 	}
-	if err := findRsult.Err(); err != nil {
+	if err := findResult.Err(); err != nil {
 		log.Fatal(err)
 	}
 	return tasksList
 
 }
 func DeleteTask(taskIdHex string) {
-	taskId, err := rimitive.ObjectIDFromHex(taskIdHex)
-	if err != nl {
+	taskId, err := primitive.ObjectIDFromHex(taskIdHex)
+	if err != nil {
 		panic(err)
 	}
 	fmt.Println("objectId", taskId)
 
-	deleteResult, _ := taskCollection.DleteOne(context.TODO(), bson.M{"_id": taskId})
+	deleteResult, _ := taskCollection.DeleteOne(context.TODO(), bson.M{"_id": taskId})
 	if deleteResult.DeletedCount == 0 {
 		log.Fatal("Error on deleting one Task", err)
 
 	}
-	mt.Println("Deleted task of Id ", taskIdHex, deleteResult)
+	fmt.Println("Deleted task of Id ", taskIdHex, deleteResult)
 }
 func ToggleTaskDone(taskIdHex string) {
-	taskId, err := rimitive.ObjectIDFromHex(taskIdHex)
-	if err != nl {
+	taskId, err := primitive.ObjectIDFromHex(taskIdHex)
+	if err != nil {
 		panic(err)
 	}
 	fmt.Println("objectId", taskId)
 
 	var foundTask models.Task
-	err = taskCollection.FindOne(context.TOD(), bson.M{"_id": taskId}).Decode(&foundTask)
-	var toggleStatuTask = !foundTask.IsDone
+	err = taskCollection.FindOne(context.TODO(), bson.M{"_id": taskId}).Decode(&foundTask)
+	var toggleStatusTask = !foundTask.IsDone
 	if err != nil {
-		log.Faal(err)
+		log.Fatal(err)
 		return
 	}
 	fmt.Println(foundTask)
-	result, _ := tasCollection.UpdateOne(
+	result, _ := taskCollection.UpdateOne(
 		context.TODO(),
 		bson.M{"_id": taskId},
-		son.M{"$set": bson.M{"is_done": toggleStatusTask}},
+		bson.M{"$set": bson.M{"is_done": toggleStatusTask}},
 	)
-	mt.Println("Task done with id", taskIdHex, result)
+	fmt.Println("Task done with id", taskIdHex, result)
 }
-func UpdateTask(taskIdHex string, updatedTask modelsTask) {
-	taskId, err := rimitive.ObjectIDFromHex(taskIdHex)
-	if err != nl {
+func UpdateTask(taskIdHex string, updatedTask models.Task) {
+	taskId, err := primitive.ObjectIDFromHex(taskIdHex)
+	if err != nil {
 		panic(err)
 	}
 	fmt.Println("objectId", taskId)
@@ -144,7 +146,7 @@ func UpdateTask(taskIdHex string, updatedTask modelsTask) {
 		log.Fatal(err)
 	}
 	fmt.Printf(
-		"insert: %d, updated %d, deleted: %d /n",
+		"insert: %d, updated%d, deleted: %d /n",
 		result.MatchedCount,
 		result.ModifiedCount,
 		result.UpsertedCount,
