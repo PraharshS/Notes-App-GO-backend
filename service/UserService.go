@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"notes-app/database"
 	"notes-app/models"
+	encrytion "notes-app/util"
 )
 
 func CreateUser(w http.ResponseWriter, r *http.Request) {
@@ -22,7 +23,6 @@ func CreateUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	var addedUser = database.InsertUser(user)
-	// fmt.Println("added user ", addedUser)
 	json.NewEncoder(w).Encode(addedUser)
 }
 func LoginUser(w http.ResponseWriter, r *http.Request) {
@@ -30,10 +30,15 @@ func LoginUser(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Access-Control-Allow-Origin", "*")
 	w.Header().Set("Access-Control-Allow-Methods", "POST")
 	w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
+	token := encrytion.TokenGenerator()
+	fmt.Println("login Token", token)
 	var user models.User
 	json.NewDecoder(r.Body).Decode(&user)
 	fmt.Println("login hit with user", user)
-
 	var loggedUser = database.CheckUserLogin(user)
-	json.NewEncoder(w).Encode(loggedUser)
+	var userWithToken models.UserWithToken
+	userWithToken.Token = token
+	userWithToken.User = loggedUser
+
+	json.NewEncoder(w).Encode(userWithToken)
 }

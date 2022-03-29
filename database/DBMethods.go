@@ -30,16 +30,16 @@ func InsertUser(user models.User) models.User {
 	if err != nil {
 		log.Fatal(err)
 	}
-	fmt.Println("USER CREAD ID", insertResult.InsertedID, user.Username)
+	fmt.Println("USER CREATED ID", insertResult.InsertedID, user.Username)
 	var result models.User
 	var nullUser models.User
 	err = userCollection.FindOne(context.Background(), bson.M{"_id": insertResult.InsertedID}).Decode(&result)
-	fmt.Println("RESULT ", result.ID, result.Username)
-	fmt.Println("RELT ", result)
+	fmt.Println("RESULT", result.ID, result.Username)
+	fmt.Println("RESULT", result)
 	if err != nil {
 		return nullUser
 	}
-	fmt.Println(" ERR ")
+	fmt.Println("ERR")
 	return result
 }
 func CheckUserLogin(user models.User) models.User {
@@ -53,7 +53,7 @@ func CheckUserLogin(user models.User) models.User {
 	if !passwordMatch {
 		return nullUser
 	}
-	fmt.Println("gin Data", result.ID, result.Username, result.Password)
+	fmt.Println("Matched Data", result.ID, result.Username, result.Password)
 	return result
 }
 func InsertTask(task models.Task) models.Task {
@@ -67,7 +67,7 @@ func InsertTask(task models.Task) models.Task {
 	if err != nil {
 		log.Fatal(err)
 	}
-	fmt.Println("SK CREATED", insertResult.InsertedID)
+	fmt.Println("TASK CREATED", insertResult.InsertedID)
 	return result
 }
 func GetTasksByUser(userIDHex string) []models.Task {

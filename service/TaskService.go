@@ -43,7 +43,6 @@ func FetchTasks(w http.ResponseWriter, r *http.Request) {
 	if !ok {
 		fmt.Println("id is missing in parameters")
 	}
-	fmt.Println(`userID := `, userID)
 	fmt.Println("fetch tasks hit with userID", userID)
 	var tasksList = database.GetTasksByUser(userID)
 	if tasksList == nil {
