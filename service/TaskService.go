@@ -72,7 +72,15 @@ func DeleteTask(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode("Task Deleted Successfully")
 }
 func ToggleTaskDone(w http.ResponseWriter, r *http.Request) {
-	fmt.Println("Done task hit")
+	w.Header().Set("Content-Type", "application/x-www-form-urlencoded")
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+	w.Header().Set("Access-Control-Allow-Methods", "PUT")
+	w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
+	// Preflight request sent by react
+	fmt.Println("Done task hit", r.Method)
+	if r.Method == "OPTIONS" {
+		return
+	}
 	vars := mux.Vars(r)
 	id, ok := vars["id"]
 	if !ok {
@@ -84,7 +92,7 @@ func ToggleTaskDone(w http.ResponseWriter, r *http.Request) {
 func UpdateTask(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/x-www-form-urlencoded")
 	w.Header().Set("Access-Control-Allow-Origin", "*")
-	w.Header().Set("Access-Control-Allow-Methods", "DELETE")
+	w.Header().Set("Access-Control-Allow-Methods", "POST")
 	w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
 	// Preflight request sent by react
 	if r.Method == "OPTIONS" {
